@@ -1,26 +1,11 @@
-export class GithubUser {
-    static search(username) {
-        const endPoint = `https://api.github.com/users/${username}`
-        return fetch(endPoint)
-            .then(data => data.json())
-            .then(({ login, name, public_repos, followers }) => ({
-                login,
-                name,
-                public_repos,
-                followers
-
-            }))
-
-    }
-
-}
+import { GithubUser } from "./githubUser.js"
 
 
 export class Favorites {
     constructor(root) {
         this.root = document.querySelector(root)
         this.load()
-      
+
     }
 
     load() {
@@ -32,16 +17,22 @@ export class Favorites {
     }
     async add(userToAdd) {
         try {
+            const userExists = this.entries.find(entry => entry.login === userToAdd)
+            console.log(userExists)
+            if (userExists) {
+                throw new Error(`${userToAdd} \n já existe!`)
+            }
+
             const userResult = await GithubUser.search(userToAdd)
             console.log(userResult)
             if (userResult.login === undefined) {
-                throw new Error('Usuario nao encontrado!')
+                throw new Error(`${userToAdd} \n não encontrado`)
             }                           // spread opérator
             this.entries = [userResult, ...this.entries]
             this.update()
             this.save()
         } catch (error) {
-            alert(`Usuario ( ${userToAdd} ) \n não encontardo!`)
+            alert(error.message)
         }
 
     }
