@@ -20,16 +20,29 @@ export class Favorites {
     constructor(root) {
         this.root = document.querySelector(root)
         this.load()
-       GithubUser.search('diego3g').then(user => console.log(user))
+      
     }
 
     load() {
-        this.entries = localStorage.getItem('@git-hub-favorites') || []
+        this.entries = JSON.parse(localStorage.getItem('@github-favorites:')) || []
 
     }
-    async add( userToAdd){
-        const userResult = await GithubUser.search(userToAdd)
-        console.log(userResult)
+    save() {
+        localStorage.setItem('@github-favorites:', JSON.stringify(this.entries))
+    }
+    async add(userToAdd) {
+        try {
+            const userResult = await GithubUser.search(userToAdd)
+            console.log(userResult)
+            if (userResult.login === undefined) {
+                throw new Error('Usuario nao encontrado!')
+            }                           // spread opérator
+            this.entries = [userResult, ...this.entries]
+            this.update()
+            this.save()
+        } catch (error) {
+            alert(`Usuario ( ${userToAdd} ) \n não encontardo!`)
+        }
 
     }
 
@@ -40,6 +53,7 @@ export class Favorites {
 
         this.entries = filteredEntries
         this.update()
+        this.save()
     }
 
 }
@@ -52,12 +66,12 @@ export class FavoritesView extends Favorites {
         this.onaddPerson()
     }
 
-    onaddPerson(){
+    onaddPerson() {
         const addButton = this.root.querySelector('.search button')
-        addButton.onclick =()=>{
-            const {value} = this.root.querySelector('.search input')
+        addButton.onclick = () => {
+            const { value } = this.root.querySelector('.search input')
             this.add(value)
-            
+
         }
     }
 
@@ -67,10 +81,11 @@ export class FavoritesView extends Favorites {
         this.entries.forEach((user) => {
             const row = this.createRow()
             row.querySelector('.user img').src = `https://github.com/${user.login}.png`
+            row.querySelector('.user a').href = `https://github.com/${user.login}`
             row.querySelector('.user img').alt = `Imagem do perfil do ${user.name}`
             row.querySelector('.user p').textContent = user.name
             row.querySelector('.user span').textContent = user.login
-            row.querySelector('.repositories').textContent = user.public_repo
+            row.querySelector('.repositories').textContent = user.public_repos
             row.querySelector('.followers').textContent = user.followers
             this.tbody.appendChild(row)
 
